@@ -42,7 +42,7 @@ function handlerClick(e) {
     let idMathc = e.target.parentNode.firstChild;
 
     const item = items.filter((dato) => dato.id == idMathc.firstChild.textContent)[0];
-    console.log(item.id)
+    
 
     cargarDatos(formulario, item);
     modificacionBotones(true);
@@ -202,7 +202,7 @@ function rellenarTabla() {
           btnBorrar.setAttribute("class", "btn btn-borrar-tabla")
           btnBorrar.textContent = "Borrar";
           btnBorrar.addEventListener("click", (e) => {
-            console.log('hice click')
+            
             botonEliminar({ target: { dataset: { id: item.id } } });
           });
           nuevaCelda.appendChild(btnBorrar);

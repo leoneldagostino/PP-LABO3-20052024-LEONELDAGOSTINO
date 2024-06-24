@@ -1,12 +1,12 @@
 // Función para mostrar el spinner
 export function mostrarSpinner() {
-    console.log('mostrarSpinner');
+    
     action(true);
 }
 
 // Función para ocultar el spinner
 export function ocultarSpinner() {
-    console.log('ocultado');
+    
     action();
 }
 
