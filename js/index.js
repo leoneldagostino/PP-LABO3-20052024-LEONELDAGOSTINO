@@ -14,8 +14,7 @@ overlay.classList.add('modal-overlay');
 
 document.addEventListener("DOMContentLoaded", onInit); // importante no poner parentesis, es un callback
 document.addEventListener("click", handlerClick)
-// btnCancelar.addEventListener("click", actualizarFormulario);
-btnCancelar.addEventListener("click", cerrarModal);
+btnCancelar.addEventListener("click", botonCancelar);
 Modal.addEventListener("click", mostrarModal);
 overlay.addEventListener("click", cerrarModal);
 
@@ -25,15 +24,19 @@ btnBorrar.addEventListener("click", botonEliminar);
 
 function onInit() {
   loadItems();
-  // handlerClick();
   escuchandoFormulario();
   escuchandoBtnDeleteAll();
 
   obtenerAño();
-  // botonEliminar();
 }
 
 
+/**
+ * Maneja el evento click en la tabla
+ * si el evento es en una celda de la tabla carga los datos en el formulario
+ * si el evento es en cualquier otro lugar cierra el modal y limpia el formulario
+ * 
+ */
 function handlerClick(e) {
   if(e.target.matches('td')){
     let idMathc = e.target.parentNode.firstChild;
@@ -53,6 +56,13 @@ function handlerClick(e) {
 }
 
 
+/**
+ * Modifica el estilo de los botones de borrar 
+ * si habilitado es true cambia la clase a activado
+ * si es false cambia la clase a desactivado
+ *
+ * @param {boolean} [habilitado=false] 
+ */
 function modificacionBotones(habilitado=false){
   if(habilitado){
     btnBorrar.setAttribute("class", "btn btn-eliminar activado")
@@ -61,6 +71,14 @@ function modificacionBotones(habilitado=false){
   }
   
 }
+
+
+/**
+ * Elimina un item del array items y del local storage
+ * @async
+ * @param {*} e
+ * @returns {*}
+ */
 async function botonEliminar(e){
 
   
@@ -83,6 +101,14 @@ async function botonEliminar(e){
 
 
 
+/**
+ * Carga los datos del item en el formulario
+ * si el item no existe limpia el formulario
+ * si el item existe carga los datos en el formulario
+ *
+ * @param {*} formCarga 
+ * @param {*} datos 
+ */
 function cargarDatos(formCarga, datos){
   formCarga.id.value = datos.id;
   formCarga.nombre.value = datos.nombre;
@@ -105,6 +131,14 @@ function cargarDatos(formCarga, datos){
   }
 }
 
+/**
+ * Carga los items del local storage en el array items
+ * si no hay items en el local storage crea un array vacio
+ * convierte los items en objetos de la clase Planeta
+ * rellena la tabla con los datos de los items
+ *
+ * @returns {*} retorna un array de objetos de la clase Planeta
+ */
 async function loadItems() {
   mostrarSpinner();
   let str = await leer(KEY_STORAGE);
@@ -131,6 +165,13 @@ async function loadItems() {
 }
 
 
+/**
+ * Rellena la tabla con los datos de los items
+ * limpia la tabla antes de rellenarla
+ * crea las celdas y las filas de la tabla
+ * agrega los botones de modificar y borrar a cada fila
+ * agrega los eventos a los botones de modificar y borrar
+ */
 function rellenarTabla() {
     const celdas = ["id","nombre", "tamaño", "masa", "tipo", "distancia", "vida", "anillo","atmosfera", "acciones"];
     const tbody = document.querySelector("tbody"); 
@@ -175,16 +216,18 @@ function rellenarTabla() {
   }
   
 
-function esUpdate()
-{
-  const form = document.getElementById("form-item");
-  if(form.querySelector("#id").value != "")
-    {
-      return true;
-    }
-  return false;
-}
 
+
+/**
+ * Escucha el evento submit del formulario
+ * trae los datos de los campos realizando su validacion y los guarda en el local storage
+ * si el item ya existe lo actualiza
+ * si no existe lo agrega al array items
+ * muestra un alert si los datos son incorrectos
+ * limpia el formulario
+ * actualiza la tabla
+ *
+ */
 function escuchandoFormulario() {
   const form = document.getElementById("form-item");
 
@@ -200,7 +243,22 @@ function escuchandoFormulario() {
     const vida = form.querySelector("#vida").checked ? "si" : "no";
     const anillo = form.querySelector("#anillo").checked ? "si" : "no";
     const atmosfera = form.querySelector("#atmosfera").value;
+    const campos = [
+      { valor: nombre, validacion: { obligatorio: true }, nombreCampo: "nombre" },
+      { valor: tamaño, validacion: { obligatorio: true ,tipo: "numerico" }, nombreCampo: "tamaño" },
+      { valor: masa, validacion: { obligatorio: true }, nombreCampo: "masa" },
+      { valor: tipo, validacion: { obligatorio: true }, nombreCampo: "tipo" },
+      { valor: distancia, validacion: { obligatorio: true, tipo: "numerico" }, nombreCampo: "distancia" },
+      { valor: atmosfera, validacion: { obligatorio: true }, nombreCampo: "atmosfera" }
+    ];
 
+    let validar = validacionCampos(campos)
+
+    if(!validar)
+      {
+        return;
+      }
+    
     const model = new Planeta(id, nombre, tamaño, masa, tipo, distancia, vida, anillo, atmosfera);
     const respuesta = model.verify();
 
@@ -230,12 +288,18 @@ function escuchandoFormulario() {
   });
 }
 
+/**
+ * Limpia el formulario
+ */
 function actualizarFormulario() {
   const form = document.getElementById("form-item");
   form.reset();
   
 }
 
+/**
+ * Escucha el evento click del boton de eliminar todos los items
+ */
 function escuchandoBtnDeleteAll() {
   const btn = document.getElementById("btn-delete-all");
 
@@ -259,6 +323,9 @@ function escuchandoBtnDeleteAll() {
   });
 }
 
+/**
+ * Obtiene el año actual y lo muestra en el footer
+ */
 function obtenerAño(){
   var fechaActual = new Date();
   let fechaMostrar = document.getElementById("año");
@@ -266,11 +333,17 @@ function obtenerAño(){
 
 }
 
+/**
+ * Muestra el modal
+ */
 function mostrarModal() {
   document.body.appendChild(overlay);
   formulario.classList.remove('hidden');
 }
 
+/**
+ * Cierra el modal
+ */
 function cerrarModal() {
   if (document.body.contains(overlay)) {
     document.body.removeChild(overlay);
@@ -279,21 +352,40 @@ function cerrarModal() {
 }
 
 
-// function validarCampoString(campo)
-// {
-//   if(typeof campo !== 'string'){
-//     alert('El campo debe ser un texto');
-//   }
-//   return true;
+/**
+ * La funcion cierra el modal y limpia el formulario
+ */
+function botonCancelar()
+{
+  cerrarModal();
+  modificacionBotones(false);
+  actualizarFormulario();
+}
 
-// }
-// function validarCampoNumero(campoNumerico){
-//   let numeroInt = parseInt(campoNumerico);
-//   if(typeof numeroInt === 'number')
-//     {
-//       console.log(numeroInt);
-//       return true
-//     }
-//   console.log("El campo deber ser un numero");
-//   return false;
-// }
+/**
+ * Realiza validaciones de los campos
+ *
+ * @param {*} campos se espera un array de objetos con la siguiente estructura { valor: "", validacion: { obligatorio: true, tipo: "numerico" }, nombreCampo: "nombre" }
+ * @returns {boolean} retorna true si los campos son validos, false si no lo son
+ */
+function validacionCampos(campos)
+{
+  for (let campo of campos) 
+    {
+      let { valor, validacion, nombreCampo } = campo;
+
+      if (validacion.obligatorio && !valor) {
+        alert(`El campo ${nombreCampo} es obligatorio`);
+        return false;
+      }
+
+      if (validacion.tipo === "numerico" && (isNaN(valor) || valor <= 0)) {
+        alert(`El campo ${nombreCampo} debe ser un número positivo`);
+        return false;
+      }
+    }
+
+    return true;
+}
+
+

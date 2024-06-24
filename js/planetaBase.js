@@ -7,14 +7,6 @@ class PlanetaBase {
     this.tamaño = tamaño;
   }
 
-  verify() {
-    return true;
-    // return this.checkTitulo();
-  }
-
-  checkTitulo() {
-    // return this.titulo && this.precio > 0;
-  }
 }
 
 export { PlanetaBase };
