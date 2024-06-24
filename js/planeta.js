@@ -11,12 +11,14 @@ class Planeta extends PlanetaBase {
     }
 
     verify() {
-        return this.checkDistancia() && this.checkAtmosfera();
+        return this.checkDistancia() && this.validarAtmosfera();
     }
 
     checkDistancia() {
-        if (typeof this.distancia !== 'number') {
+
+        if (!parseInt(this.distancia)) {
             alert('La distancia debe ser un número');
+            return false;
         }
         return true;
     }
@@ -24,8 +26,9 @@ class Planeta extends PlanetaBase {
 
 
     validarAtmosfera() {
-        if (typeof this.atmosfera !== 'string') {
+        if (typeof this.atmosfera != 'string') {
             alert('La atmósfera debe ser una cadena de texto');
+            return false;
         }
         return true;
     }

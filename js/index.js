@@ -8,10 +8,16 @@ const formulario = document.getElementById("form-item");
 const btnBorrar = document.getElementById("btnEliminar");
 const btnCancelar = document.getElementById("btnCancelar");
 const btnGuardar = document.getElementById("btnGuardar");
+const Modal = document.getElementById("btnModal");
+const overlay = document.createElement('div');
+overlay.classList.add('modal-overlay');
 
 document.addEventListener("DOMContentLoaded", onInit); // importante no poner parentesis, es un callback
 document.addEventListener("click", handlerClick)
-btnCancelar.addEventListener("click", actualizarFormulario);
+// btnCancelar.addEventListener("click", actualizarFormulario);
+btnCancelar.addEventListener("click", cerrarModal);
+Modal.addEventListener("click", mostrarModal);
+overlay.addEventListener("click", cerrarModal);
 
 btnBorrar.addEventListener("click", botonEliminar);
 
@@ -33,11 +39,13 @@ function handlerClick(e) {
     let idMathc = e.target.parentNode.firstChild;
 
     const item = items.filter((dato) => dato.id == idMathc.firstChild.textContent)[0];
+    console.log(item.id)
 
     cargarDatos(formulario, item);
     modificacionBotones(true);
+    mostrarModal();
   } 
-  else if(!e.target.matches('input') && !e.target.matches('select') && !e.target.matches('textarea') && !e.target.matches('button'))
+  else if(!e.target.matches('input') && !e.target.matches('select') && !e.target.matches('textarea') && !e.target.matches('button') )
   {
     modificacionBotones(false);
     actualizarFormulario();
@@ -55,14 +63,13 @@ function modificacionBotones(habilitado=false){
 }
 async function botonEliminar(e){
 
-  if(confirm("Desea eliminar el item seleccionado?")){
-    mostrarSpinner();
-    let idEliminar = formulario.id.value;
-    console.log("Id a eliminar: "+ idEliminar)
-    console.log("Lista previa a eliminar: "+ items)
+  
+  const idEliminar = e.target.dataset.id || formulario.id.value;
 
+  if (idEliminar && confirm("Desea eliminar el item seleccionado?")) {
+    cerrarModal();
+    mostrarSpinner();
     let itemsFiltrado = items.filter((dato) => dato.id != idEliminar);
-    console.log("Lista despues de eliminar: "+itemsFiltrado);
     items = itemsFiltrado;
     const str = objectToJson(items);
     await escribir(KEY_STORAGE, str);
@@ -70,17 +77,18 @@ async function botonEliminar(e){
     actualizarFormulario();
     rellenarTabla();
   }
-} 
+}
 
 
 
 
 
 function cargarDatos(formCarga, datos){
+  formCarga.id.value = datos.id;
   formCarga.nombre.value = datos.nombre;
-  formCarga.tamaño.value = datos.tamaño;
+  formCarga.tamaño.value = parseInt(datos.tamaño);
   formCarga.masa.value = datos.masa;
-  formCarga.distancia.value = datos.distancia;
+  formCarga.distancia.value = parseInt(datos.distancia);
   formCarga.vida.checked = datos.vida === "si";
   formCarga.anillo.checked = datos.anillo === "si";
 
@@ -110,13 +118,12 @@ async function loadItems() {
         obj.nombre,
         obj.tamaño,
         obj.masa,
-        obj.distancia,
         obj.tipo,
+        obj.distancia,
         obj.vida,
         obj.anillo,
         obj.atmosfera
     );
-  
     items.push(model);
   });
 
@@ -125,7 +132,7 @@ async function loadItems() {
 
 
 function rellenarTabla() {
-    const celdas = ["id","nombre", "tamaño", "masa", "distancia", "tipo", "vida", "anillo","atmosfera", "acciones"];
+    const celdas = ["id","nombre", "tamaño", "masa", "tipo", "distancia", "vida", "anillo","atmosfera", "acciones"];
     const tbody = document.querySelector("tbody"); 
 
     while (tbody.firstChild) {
@@ -146,14 +153,16 @@ function rellenarTabla() {
           btnModificar.addEventListener("click", () => {
             cargarDatos(formulario, item);
             modificacionBotones(true);
+            mostrarModal();
           });
           nuevaCelda.appendChild(btnModificar);
 
           let btnBorrar = document.createElement("button");
           btnBorrar.setAttribute("class", "btn btn-borrar-tabla")
           btnBorrar.textContent = "Borrar";
-          btnBorrar.addEventListener("click", () => {
-            botonEliminar(item.id);
+          btnBorrar.addEventListener("click", (e) => {
+            console.log('hice click')
+            botonEliminar({ target: { dataset: { id: item.id } } });
           });
           nuevaCelda.appendChild(btnBorrar);
         } else {
@@ -166,49 +175,56 @@ function rellenarTabla() {
   }
   
 
+function esUpdate()
+{
+  const form = document.getElementById("form-item");
+  if(form.querySelector("#id").value != "")
+    {
+      return true;
+    }
+  return false;
+}
 
 function escuchandoFormulario() {
-
   const form = document.getElementById("form-item");
 
   form.addEventListener("submit", async (e) => {
-
     e.preventDefault();
 
-    var fechaActual = new Date();
+    const id = form.querySelector("#id").value || Date.now();
+    const nombre = form.querySelector("#nombre").value;
+    const tamaño = form.querySelector("#tamaño").value;
+    const masa = form.querySelector("#masa").value;
+    const tipo = form.querySelector("#tipo").value;
+    const distancia = form.querySelector("#distancia").value;
+    const vida = form.querySelector("#vida").checked ? "si" : "no";
+    const anillo = form.querySelector("#anillo").checked ? "si" : "no";
+    const atmosfera = form.querySelector("#atmosfera").value;
 
-    const model = new Planeta(
-      fechaActual.getTime(),
-      form.querySelector("#nombre").value,
-      form.querySelector("#tamaño").value,
-      form.querySelector("#masa").value,
-      form.querySelector("#distancia").value,
-      form.querySelector("#tipo").value,
-      form.querySelector("#vida").checked ? "si" : "no",
-      form.querySelector("#anillo").checked ? "si" : "no",
-      form.querySelector("#atmosfera").value,
-    )
-
+    const model = new Planeta(id, nombre, tamaño, masa, tipo, distancia, vida, anillo, atmosfera);
     const respuesta = model.verify();
-    console.log(respuesta);
 
     if (respuesta) {
+      cerrarModal();
       mostrarSpinner();
-      items.push(model);
+      const index = items.findIndex(item => item.id == id);
+      if (index === -1) {
+        items.push(model);
+      } else {
+        items[index] = model;
+      }
+
       const str = objectToJson(items);
-      
+
       try {
         await escribir(KEY_STORAGE, str);
-
         actualizarFormulario();
         rellenarTabla();
-      }
-      catch (error) {
+      } catch (error) {
         alert(error);
       }
       ocultarSpinner();
-    }
-    else {
+    } else {
       alert(respuesta);
     }
   });
@@ -217,6 +233,7 @@ function escuchandoFormulario() {
 function actualizarFormulario() {
   const form = document.getElementById("form-item");
   form.reset();
+  
 }
 
 function escuchandoBtnDeleteAll() {
@@ -248,3 +265,35 @@ function obtenerAño(){
   fechaMostrar.textContent = fechaActual.getFullYear();
 
 }
+
+function mostrarModal() {
+  document.body.appendChild(overlay);
+  formulario.classList.remove('hidden');
+}
+
+function cerrarModal() {
+  if (document.body.contains(overlay)) {
+    document.body.removeChild(overlay);
+  }
+  formulario.classList.add('hidden');
+}
+
+
+// function validarCampoString(campo)
+// {
+//   if(typeof campo !== 'string'){
+//     alert('El campo debe ser un texto');
+//   }
+//   return true;
+
+// }
+// function validarCampoNumero(campoNumerico){
+//   let numeroInt = parseInt(campoNumerico);
+//   if(typeof numeroInt === 'number')
+//     {
+//       console.log(numeroInt);
+//       return true
+//     }
+//   console.log("El campo deber ser un numero");
+//   return false;
+// }
