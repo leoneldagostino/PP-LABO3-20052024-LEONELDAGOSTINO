@@ -7,7 +7,10 @@
     <link rel="stylesheet" href="./styles/normalize.css" />
     <link rel="stylesheet" href="./styles/index.css" />
     <link rel="stylesheet" href="./styles/form.css" />
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css" rel="stylesheet">
+
     <link rel="icon" type="image/x-icon" href="assets/images/logo.svg" />
+    <link href="./output.css" rel="stylesheet">
 
     <script src="./js/index.js" type="module" defer></script>
 
@@ -125,6 +128,37 @@
         </form>
 
         <br /><br /><br /><br /><br />
+
+
+        <div class="bg-gray-500 my-24 mx-12 max-h-0 ">
+          <section class="mb-6">
+            <div>
+              <label for="filtarTipo">Filtar por tipo:</label>
+              <select id="filtarTipo">
+                <option value="">Todos</option>
+                <option value="rocoso">Rocoso</option>
+                <option value="gaseoso">Gaseoso</option>
+                <option value="helado">Helado</option>
+                <option value="enano">Enano</option>
+              </select>
+              <span id="promedio">Promedio:</span>
+
+            </div>
+            <div class=" flex space-x-6 px-5 my-2 justify-center items-center align-middle">
+              <label class="bg-red-300 "><input type="checkbox" data-column="nombre" checked>Nombre</label>
+              <label><input type="checkbox" data-column="tamaño" checked>Tamaño</label>
+              <label><input type="checkbox" data-column="masa" checked>Masa</label>
+              <label><input type="checkbox" data-column="tipo" checked>Tipo</label>
+              <label><input type="checkbox" data-column="distancia" checked>Distancia</label>
+              <label><input type="checkbox" data-column="vida" checked>Vida</label>
+              <label><input type="checkbox" data-column="anillo" checked>Anillo</label>
+              <label><input type="checkbox" data-column="atmosfera" checked>Atmosfera</label>
+
+            </div>
+            
+          </section>
+
+        </div>
 
         <div class="container-btn-delete-all">
           <button type="button" id="btn-delete-all" class="btn">Borrar Todo</button>

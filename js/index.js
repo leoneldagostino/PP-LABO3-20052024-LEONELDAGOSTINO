@@ -28,7 +28,8 @@ function onInit() {
   // handlerClick();
   escuchandoFormulario();
   escuchandoBtnDeleteAll();
-
+  setupFilterControls();
+  setupColumnControls();
   obtenerAño();
   // botonEliminar();
 }
@@ -50,6 +51,23 @@ function handlerClick(e) {
     modificacionBotones(false);
     actualizarFormulario();
   }
+}
+
+function setupFilterControls() {
+  const filterType = document.getElementById("filtarTipo");
+  console.log(filterType.value)
+  filterType.addEventListener("change", handleFilter);
+}
+function handleFilter()
+{
+  const filtradoPorTipo = document.getElementById("filtarTipo").value;
+  let filtrado = items;
+
+  if(filtradoPorTipo){
+    filtrado = items.filter(item => item.tipo === filtradoPorTipo);
+  }
+
+  rellenarTabla(filtrado);
 }
 
 
@@ -131,49 +149,72 @@ async function loadItems() {
 }
 
 
-function rellenarTabla() {
-    const celdas = ["id","nombre", "tamaño", "masa", "tipo", "distancia", "vida", "anillo","atmosfera", "acciones"];
-    const tbody = document.querySelector("tbody"); 
+function setupColumnControls() {
+  const columnControls = document.querySelectorAll('.column-controls input[type="checkbox"]');
+  columnControls.forEach(control => {
+    control.addEventListener("change", handleColumnVisibilityChange);
+  });
+}
 
-    while (tbody.firstChild) {
-      tbody.removeChild(tbody.firstChild);
-    }
+function handleColumnVisibilityChange() {
+  const columnControls = document.querySelectorAll('.column-controls input[type="checkbox"]');
+  columnControls.forEach(control => {
+    const column = control.dataset.column;
+    const isChecked = control.checked;
+    const columnElements = document.querySelectorAll(`td:nth-child(${getColumnIndex(column) + 1}), th:nth-child(${getColumnIndex(column) + 1})`);
 
-    items.forEach((item) => {
-      let nuevaFila = document.createElement("tr");
-      celdas.forEach((celda) => {
-        let nuevaCelda = document.createElement("td");
-        if (celda === "id") {
-          nuevaCelda.style.display = "none";
-        }
-        if (celda === "acciones") {
-          let btnModificar = document.createElement("button");
-          btnModificar.textContent = "Modificar";
-          btnModificar.setAttribute("class", "btn btn-modificar-tabla")
-          btnModificar.addEventListener("click", () => {
-            cargarDatos(formulario, item);
-            modificacionBotones(true);
-            mostrarModal();
-          });
-          nuevaCelda.appendChild(btnModificar);
-
-          let btnBorrar = document.createElement("button");
-          btnBorrar.setAttribute("class", "btn btn-borrar-tabla")
-          btnBorrar.textContent = "Borrar";
-          btnBorrar.addEventListener("click", (e) => {
-            console.log('hice click')
-            botonEliminar({ target: { dataset: { id: item.id } } });
-          });
-          nuevaCelda.appendChild(btnBorrar);
-        } else {
-          nuevaCelda.textContent = item[celda];
-        }
-        nuevaFila.appendChild(nuevaCelda);
-      });
-      tbody.appendChild(nuevaFila); 
+    columnElements.forEach(el => {
+      el.style.display = isChecked ? "" : "none";
     });
+  });
+}
+
+function getColumnIndex(columnName) {
+  const columns = ["nombre", "tamaño", "masa", "tipo", "distancia", "vida", "anillo", "atmosfera", "acciones"];
+  return columns.indexOf(columnName);
+}
+
+function rellenarTabla(filteredItems = items) {
+  const celdas = ["id", "nombre", "tamaño", "masa", "tipo", "distancia", "vida", "anillo", "atmosfera", "acciones"];
+  const tbody = document.querySelector("tbody");
+
+  while (tbody.firstChild) {
+    tbody.removeChild(tbody.firstChild);
   }
-  
+
+  filteredItems.forEach((item) => {
+    let nuevaFila = document.createElement("tr");
+    celdas.forEach((celda) => {
+      let nuevaCelda = document.createElement("td");
+      if (celda === "id") {
+        nuevaCelda.style.display = "none";
+      }
+      if (celda === "acciones") {
+        let btnModificar = document.createElement("button");
+        btnModificar.textContent = "Modificar";
+        btnModificar.setAttribute("class", "btn btn-modificar-tabla")
+        btnModificar.addEventListener("click", () => {
+          cargarDatos(formulario, item);
+          modificacionBotones(true);
+          mostrarModal();
+        });
+        nuevaCelda.appendChild(btnModificar);
+
+        let btnBorrar = document.createElement("button");
+        btnBorrar.setAttribute("class", "btn btn-borrar-tabla")
+        btnBorrar.textContent = "Borrar";
+        btnBorrar.addEventListener("click", (e) => {
+          console.log('hice click')
+          botonEliminar({ target: { dataset: { id: item.id } } });
+        });
+        nuevaCelda.appendChild(btnBorrar);
+      } else {
+        nuevaCelda.textContent = item[celda];
+      }
+      nuevaFila.appendChild(nuevaCelda);
+    });
+    tbody.appendChild(nuevaFila);
+  })};
 
 function esUpdate()
 {
@@ -278,6 +319,7 @@ function cerrarModal() {
   formulario.classList.add('hidden');
 }
 
+handleColumnVisibilityChange();
 
 // function validarCampoString(campo)
 // {
